@@ -143,6 +143,28 @@ Example of Required Format:
 
 Answer:"""
     return ChatPromptTemplate.from_template(template)
+
+def build_review_summary_prompt(product_title: str) -> ChatPromptTemplate:
+    """
+    Create the prompt template for summarizing a collection of reviews.
+    """
+    template = f"""
+You are an expert review summarizer. Your task is to read a collection of user reviews for the product: "{product_title}" and provide a balanced, overall summary.
+
+INSTRUCTIONS:
+1. Analyze the sentiment (positive, negative, neutral) across all reviews.
+2. Identify the top 2 most common positive points (pros) and the top 2 most common negative points (cons).
+3. Synthesize the findings into a clear, concise overall review.
+4. Your final summary must be 4 to 6 sentences long.
+5. Do NOT invent or hallucinate any details not present in the provided reviews.
+
+REVIEWS CONTEXT:
+{{reviews_context}}
+
+Overall Product Review for "{product_title}":
+"""
+    return ChatPromptTemplate.from_template(template)
+
 # ---------------------------------------------------------------------
 # Node 2: Answer generation
 # ---------------------------------------------------------------------

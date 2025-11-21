@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Dict, Optional, List
 
-from agent import create_agent
+from agent import create_agent, build_review_summary_prompt
 from utils.retriever import create_retriever
 from utils.config import Config
 from utils.state import GraphState
@@ -125,23 +125,53 @@ def main():
                             target_id = PRODUCT_ID_MAP[num]
                             target_title = PRODUCT_TITLE_MAP[num]
                             
-                            # Call the new utility function to get reviews
                             reviews = get_reviews_by_product_id(target_id)
                             
+                            # --- PRINT RAW REVIEWS (as before) ---
                             print(f"\n--- REVIEWS FOR: {target_title} (ID: {target_id}) ---")
                             
                             if reviews:
-                                # Print a max of 5 reviews to keep output manageable
+                                # Print up to 5 reviews to avoid overwhelming the user
                                 for i, review in enumerate(reviews[:5]):
                                     print(f"Review {i+1} (Rating: {review['rating']}):")
                                     print(f"  Title: {review['title']}")
-                                    print(f"  Text: {review['text'][:150]}...\n") # Snippet of text
+                                    print(f"  Text: {review['text'][:150]}...\n")
                                 if len(reviews) > 5:
                                     print(f"Showing 5 of {len(reviews)} total reviews found.")
                             else:
                                 print("No reviews found for this product ID in the external file.")
-                                
-                            print("--- END REVIEWS ---\n")
+                                print("--- END REVIEWS ---\n")
+                                continue # Skip summary generation if no reviews
+
+                            # --- NEW LOGIC START: LLM Review Summary ---
+                            
+                            # 1. Limit the reviews to avoid LLM context overflow
+                            MAX_REVIEWS_FOR_SUMMARY = 15
+                            reviews_for_summary = reviews[:MAX_REVIEWS_FOR_SUMMARY]
+                            
+                            # 2. Format the reviews into a single string for the prompt
+                            review_strings = []
+                            for i, review in enumerate(reviews_for_summary):
+                                review_strings.append(
+                                    f"Review {i+1} (Rating: {review['rating']} - Title: {review['title']}):\n"
+                                    f"Text: {review['text']}"
+                                )
+                            reviews_context = "\n---\n".join(review_strings)
+                            
+                            # 3. Call the LLM
+                            llm = config.get_llm()
+                            summary_prompt = build_review_summary_prompt(target_title)
+                            summary_chain = summary_prompt | llm
+                            
+                            print("\n--- GENERATING OVERALL SUMMARY (Processing first 15 reviews) ---")
+                            
+                            summary = summary_chain.invoke({
+                                "reviews_context": reviews_context
+                            })
+                            
+                            print(summary)
+                            print("--- END SUMMARY ---\n")
+                            # --- NEW LOGIC END ---
                         else:
                             print("Invalid product number. Please enter a number from the list or 'back'.")
                     except ValueError:
