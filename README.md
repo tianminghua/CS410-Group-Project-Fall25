@@ -2,7 +2,7 @@
 
 We propose developing FeatureSearch, a tool that enables users to search for specific product features within Amazon reviews and analyze related customer opinions. Existing review platforms only provide overall ratings, making it difficult to understand detailed product strengths and weaknesses. Our tool integrates information retrieval and sentiment analysis to extract and summarize feature-level feedback, offering structured insights instead of raw text. We plan to use Amazon’s public review dataset, applying TF-IDF or BM25 for retrieval and VADER for sentiment scoring, with results visualized through charts and word clouds. Evaluation will be based on retrieval relevance, sentiment accuracy, and user feedback. The team will divide work into data preprocessing, retrieval and analysis, and visualization/interface development.
 
-## Prerequisites
+## Team Members
 
 - **Tina Harter** (tharter2)
 - **Dezhao Li** (dezhaol2)
