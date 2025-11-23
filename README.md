@@ -1,7 +1,12 @@
-# MP2: Constructing Langgraph RAG Agent with Ollama
+# CS410 Group Project - Product Feature Retrieval and Performance Analysis from Amazon Reviews
 
-This repository demonstrates how to construct a **Retrieval-Augmented Generation (RAG)** agent using **LangGraph** and **Ollama**.
-The agent performs document retrieval following the same pipeline used in **MP1**, relying on **Pyserini** for retrieval.
+We propose developing FeatureSearch, a tool that enables users to search for specific product features within Amazon reviews and analyze related customer opinions. Existing review platforms only provide overall ratings, making it difficult to understand detailed product strengths and weaknesses. Our tool integrates information retrieval and sentiment analysis to extract and summarize feature-level feedback, offering structured insights instead of raw text. We plan to use Amazon’s public review dataset, applying TF-IDF or BM25 for retrieval and VADER for sentiment scoring, with results visualized through charts and word clouds. Evaluation will be based on retrieval relevance, sentiment accuracy, and user feedback. The team will divide work into data preprocessing, retrieval and analysis, and visualization/interface development.
+
+## Prerequisites
+
+- **Tina Harter** (tharter2)
+- **Dezhao Li** (dezhaol2)
+- **Ziyuan Gu** (ziyuang3)
 
 ## Prerequisites
 
@@ -10,10 +15,11 @@ The agent performs document retrieval following the same pipeline used in **MP1*
 
 ## Installation
 
-1. Use the environment configured in MP1. 
+1. Install Pyserini
 
-   The following steps assume that **Pyserini** has already been installed; if not, please refer to MP1 for installation instructions.
-   Additionally, move the `data/` directory used in MP1 to the root of this project.
+   ```
+   pip install pyserini
+   ```
 
 2. Install the required packages:
 
@@ -36,21 +42,19 @@ The agent performs document retrieval following the same pipeline used in **MP1*
    ollama pull llama3.2:3b
    ```
 
-## Configuration
+5. Download dataset from Google Drive:
 
-1. Create a `.env` file in the project root directory.
+   ```
+   https://drive.google.com/drive/folders/1ZIVppO-I1QSTU-WzllgZ0dmFtQ1T3HB3
+   ```
+   Create a **dataset** directory under the project folder
 
-2. Set the following environment variables in the `.env` file:
+   Save **Appliances_cleaned.jsonl** and **meta_appliances_cleaned.jsonl** under **dataset**
 
-   - `PYSERINI_CNAME`: The dataset we want to use to build indexes and retrieve documents (e.g., MP1 docs)
-   - `OLLAMA_MODEL`: llama3.2:3b as default. You can change to the model you pull.
-   - `RETRIEVER_K`: set the amount of docs u want to retrieve per query
-   - `PYSERINI_K1`: The hyperparameter of bm25
-   - `PYSERINI_B`: The hyperparameter of bm25
 
 ## Usage
 
-Ensure your dataset is placed under the `data/` directory, then run:
+Ensure your dataset is placed under the `dataset/` directory, then run:
 
    ``` 
    python main.py 
@@ -67,22 +71,18 @@ Then, rerun the command above in a new terminal window.
 ## Project Structure
 
 ```
-RAG-agents-Langgraph-demo/
-├── data/               # Local document corpus (e.g., MP1 docs)
-├── main.py             # Entry point
-├── agent.py            # LangGraph agent logic
+CS410 Group Project/
+├── dataset/                         # Local data document
+├── main.py                          # Entry point
+├── agent.py                         # LangGraph agent logic
 ├── utils/
-│   ├── config.py       # Configuration management
-│   ├── llm.py          # Ollama LLM integration
-│   ├── retriever.py    # Document retrieval using Pyserini
-│   └── state.py        # State management for LangGraph
+│   ├── config.py                    # Configuration management
+│   ├── clean_appliances_reviews.py  # Clean up reviews
+│   ├── clean_meta_appliances.py     # Clean up metadata
+│   ├── review_loader.py             # Load reviews for specific product
+│   ├── llm.py                       # Ollama LLM integration
+│   ├── retriever.py                 # Document retrieval using Pyserini
+│   └── state.py                     # State management for LangGraph
 └── requirements.txt
 
 ```
-
-## Acknowledgement
-
-Part of the code in this repository is adapted from [RAG-agents-Langgraph](https://github.com/Feed-dev/RAG-agents-Langgraph/tree/main), 
-which is licensed under the [MIT License](https://opensource.org/licenses/MIT).
-
-We sincerely thank the original authors for their open-source contribution.

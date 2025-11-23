@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+utils/__pycache__
+
+# Virtual environment
+# (The 'venv' folder is common, but use whatever name you chose)
+venv/
+.venv/
+
+# Environment variables
+.env
+.flaskenv
+
+# Editor/IDE files (e.g., VS Code or IntelliJ/PyCharm)
+.vscode/
+.idea/
+
+# Operating System files
+.DS_Store

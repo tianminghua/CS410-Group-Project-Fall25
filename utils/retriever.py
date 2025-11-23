@@ -1,14 +1,3 @@
-"""
-retriever.py
-=========================
-Implements a BM25-based retriever using Pyserini for MP2 (LangGraph RAG Agent).
-
-This module:
-1. Preprocesses the raw text corpus into JSON files compatible with Pyserini.
-2. Builds a Lucene index.
-3. Wraps Pyserini’s BM25 retriever into a LangChain retriever.
-4. Adds an optional contextual compression layer using an LLM.
-"""
 
 import os
 import json
@@ -37,11 +26,6 @@ config = Config()
 # 1. Define a LangChain-compatible BM25 Retriever
 # ---------------------------------------------------------------------
 class PyseriniBM25Retriever(BaseRetriever):
-    """
-    A LangChain retriever built on top of Pyserini’s BM25 searcher.
-    It retrieves the top-k documents for a given query. You can change
-    to your MP1 retriever here.
-    """
 
     index_dir: str                     # Path to the Lucene index
     k: int = 5                         # Number of results to return
