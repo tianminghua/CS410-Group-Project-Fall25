@@ -61,41 +61,6 @@ class PyseriniBM25Retriever(BaseRetriever):
             f"PyseriniBM25Retriever ready — index={self.index_dir}, "
             f"k={self.k}, k1={self.k1}, b={self.b}"
         )
-
-    # def _get_relevant_documents(
-    #     self,
-    #     query: str,
-    #     *,
-    #     run_manager: Optional[CallbackManagerForRetrieverRun] = None,
-    #     **kwargs: Any,
-    # ) -> List[Document]:
-    #     """Return top-k relevant documents for a given query.
-
-    #     Notes:
-    #     - This method is called once per query.
-    #     - For multi-subquery retrieval in Task 3, call this method multiple times
-    #       (one per sub-query) in the upper-level node and then fuse the results.
-    #     """
-    #     hits = self._searcher.search(query, k=self.k)
-    #     docs: List[Document] = []
-
-    #     for h in hits:
-    #         raw = self._searcher.doc(h.docid).raw() or ""
-    #         text, title = raw, None
-    #         try:
-    #             obj = json.loads(raw)
-    #             text = obj.get("contents") or obj.get("text") or raw
-    #             title = obj.get("title")
-    #         except Exception:
-    #             pass
-
-    #         docs.append(
-    #             Document(
-    #                 page_content=text,
-    #                 metadata={"docid": h.docid, "score": float(h.score), "title": title},
-    #             )
-    #         )
-    #     return docs
     
     def _get_relevant_documents(
         self,
@@ -157,35 +122,23 @@ class PyseriniBM25Retriever(BaseRetriever):
 # ---------------------------------------------------------------------
 # 2. Helper functions for preprocessing and indexing
 # ---------------------------------------------------------------------
-# def preprocess_corpus(input_file: str, output_dir: str):
-#     """
-#     Convert a plain-text corpus (.dat or .txt) into JSON documents
-#     that Pyserini can index.
-#     """
-#     os.makedirs(output_dir, exist_ok=True)
-#     with open(input_file, "r") as f:
-#         for i, line in enumerate(tqdm(f, desc="Preprocessing corpus")):
-#             doc = {
-#                 "id": str(i),  # Each doc needs a unique ID
-#                 "contents": line.strip(),
-#             }
-#             with open(os.path.join(output_dir, f"doc{i}.json"), "w") as out:
-#                 json.dump(doc, out)
 
 def preprocess_corpus(input_file: str, output_dir: str):
     """
     Convert a specific dataset (JSONL) into clean JSON documents
     that Pyserini can index.
     
-    Enriches content with rating info and preserves product_id.
+    Enriches content with:
+    - Category Hierarchy (Critical for finding products by type)
+    - Brand
+    - Price
+    - Ratings
     """
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
-    # We will write a single large jsonl file
     output_file = os.path.join(output_dir, "documents.jsonl")
-
     print(f"Preprocessing {input_file} -> {output_file}")
     
     with open(input_file, "r", encoding="utf-8") as fin, \
@@ -197,36 +150,48 @@ def preprocess_corpus(input_file: str, output_dir: str):
                 continue
             
             try:
-                # 1. Parse original data
                 record = json.loads(line)
-                
                 doc_id = record.get("product_id")
-                # Fallback to string hash if ID missing (rare)
                 if not doc_id:
                     continue
 
-                # Extract rating info
+                # 1. Extract Metadata
+                title = record.get("title", "Unknown Product")
+                categories = record.get("categories_str", "") or " ".join(record.get("categories", []))
+                brand = record.get("brand", "")
+                price = record.get("price")
                 avg_rating = record.get("average_rating", "N/A")
                 rating_num = record.get("rating_number", 0)
+                
+                # Handle price formatting
+                price_str = f"${price}" if price else "N/A"
 
-                # 2. Construct the text content
-                # We append the rating info to the text so the LLM "reads" it automatically.
-                base_text = record.get("all_text") or record.get("title") or ""
-                enriched_text = f"{base_text}\n[Average Rating: {avg_rating} | Ratings: {rating_num}]"
+                # 2. Construct the Enriched Text (The "Searchable" Part)
+                # This ensures a search for "Coffee Machine" hits this doc because 
+                # 'categories' contains that phrase.
+                base_text = record.get("all_text") or title
+                
+                enriched_text = (
+                    f"{base_text}\n"
+                    f"Category: {categories}\n"
+                    f"Brand: {brand}\n"
+                    f"Price: {price_str}\n"
+                    f"[Rating: {avg_rating} stars | {rating_num} reviews]"
+                )
 
-                # 3. Construct Pyserini-compatible document
-                # We store extra fields in the JSON so we can retrieve them into metadata later
+                # 3. Construct Pyserini Document
                 pyserini_doc = {
                     "id": doc_id,
                     "contents": enriched_text,
-                    "title": record.get("title", ""),
+                    # Store raw metadata for the Agent to display nicely later
+                    "title": title,
                     "average_rating": avg_rating,
                     "rating_number": rating_num,
-                    # Store raw fields if you want strictly raw access later
-                    "raw_category": record.get("main_category", "")
+                    "price": price_str,
+                    "brand": brand,
+                    "product_id": doc_id
                 }
                 
-                # 4. Write to output
                 fout.write(json.dumps(pyserini_doc) + "\n")
                 
             except json.JSONDecodeError:

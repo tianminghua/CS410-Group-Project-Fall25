@@ -11,7 +11,7 @@ class Config:
 
         # Pyserini / Retriever Settings
         self.PYSERINI_CNAME = os.getenv("PYSERINI_CNAME", "meta_Appliances_cleaned")
-        self.RETRIEVER_K = int(os.getenv("RETRIEVER_K", 10))
+        self.RETRIEVER_K = int(os.getenv("RETRIEVER_K", 20))
         self.PYSERINI_K1 = float(os.getenv("PYSERINI_K1", 2.0))
         self.PYSERINI_B = float(os.getenv("PYSERINI_B", 0.8))
         

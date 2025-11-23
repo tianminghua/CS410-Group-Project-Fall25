@@ -1,21 +1,3 @@
-"""
-agent.py
-=========================
-LangGraph-based RAG agent for MP2.
-
-Pipeline:
-1) retrieve(state)        -> collects context via Pyserini BM25 (+ optional compression)
-2) generate_answer(state) -> prompts an LLM (Ollama) with the retrieved context
-
-State keys (GraphState):
-- question: str                     # user question (required)
-- context: List[str]                # accumulated evidence passages
-- retriever: Optional[BaseRetriever]# allow injection (for testing)
-- final_answer: Optional[str]       # model's answer
-- error: Optional[str]              # error message if any
-- current_step: str                 # "retrieve" | "generate_answer"
-"""
-
 import logging
 from typing import List
 
@@ -114,12 +96,11 @@ def retrieve(state: GraphState) -> GraphState:
 # ---------------------------------------------------------------------
 def build_prompt() -> ChatPromptTemplate:
     """
-    Create the QA prompt with strict, mandatory formatting instructions.
+    Create the QA prompt with strict, mandatory formatting and filtering instructions.
     """
     template = """You are a shopping assistant that helps users select products.
 
-Use ONLY the context below to answer the question. If the answer is not in the context, say you don't know.
-Crucially, you must filter the context to only include products relevant to the question.
+Use ONLY the context below to answer the question. 
 
 Context:
 {context}
@@ -127,18 +108,20 @@ Context:
 Question:
 {question}
 
-***MANDATORY OUTPUT INSTRUCTIONS***:
-You must list the products found that are relevant to the question (e.g., only "ice maker machines"). You MUST provide the Product ID, Average Rating, and Rating Number for each. DO NOT invent information or deviate from the structure below.
+***MANDATORY SELECTION RULES***:
+1. **Brand Diversity**: Prioritize listing products from DIFFERENT brands. 
+2. **No Duplicates**: Do NOT list multiple variations (e.g., colors) of the same product model.
+3. **Valid IDs Only**: Only list products that have a valid Product ID in the context. If a product has no ID, SKIP IT.
+4. **Count**: List up to 5 distinct products. If you find fewer than 5 distinct brands/models, list fewer. Do not duplicate items just to reach 5.
 
-Example of Required Format:
-1. Product Title: [Title of Product]
+***MANDATORY OUTPUT FORMAT***:
+You must output the list in the exact format below. Do not add introductory text like "Here are the products...".
+
+1. Product Title: [Title]
    - ID: [Product ID]
    - Rating: [Average Rating] ([Rating Number] reviews)
-   - Description: [A very brief (one-phrase) summary of the product features]
-2. Product Title: [Title of Next Product]
-   - ID: [Product ID]
-   - Rating: [Average Rating] ([Rating Number] reviews)
-   - Description: [A very brief (one-phrase) summary of the product features]
+   - Description: [One-sentence summary]
+2. Product Title: [Title]
 ...
 
 Answer:"""
@@ -146,22 +129,35 @@ Answer:"""
 
 def build_review_summary_prompt(product_title: str) -> ChatPromptTemplate:
     """
-    Create the prompt template for summarizing a collection of reviews.
+    Create the prompt template for summarizing reviews.
+    Optimized for a concise, scannable 'Scorecard' format.
     """
     template = f"""
-You are an expert review summarizer. Your task is to read a collection of user reviews for the product: "{product_title}" and provide a balanced, overall summary.
+You are an expert product reviewer. Your task is to summarize user reviews for: "{product_title}".
 
 INSTRUCTIONS:
-1. Analyze the sentiment (positive, negative, neutral) across all reviews.
-2. Identify the top 2 most common positive points (pros) and the top 2 most common negative points (cons).
-3. Synthesize the findings into a clear, concise overall review.
-4. Your final summary must be 4 to 6 sentences long.
-5. Do NOT invent or hallucinate any details not present in the provided reviews.
+1. Read the reviews below.
+2. Output a concise summary in the EXACT format provided.
+3. Keep the "Verdict" to 1 sentence.
+4. Limit "Pros" and "Cons" to the top 2 distinct points each.
+5. Keep the "Analysis" to maximum 3 sentences.
 
 REVIEWS CONTEXT:
 {{reviews_context}}
 
-Overall Product Review for "{product_title}":
+***REQUIRED OUTPUT FORMAT***:
+
+**Verdict:** [1-sentence bottom line, e.g., "A solid choice for beginners, but lacks durability."]
+
+**Pros:**
+* [Key Strength 1]
+* [Key Strength 2]
+
+**Cons:**
+* [Key Weakness 1]
+* [Key Weakness 2]
+
+**Analysis:** [2-3 sentences explaining the most critical details, quality issues, or specific use cases.]
 """
     return ChatPromptTemplate.from_template(template)
 

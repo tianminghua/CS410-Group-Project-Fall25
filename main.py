@@ -15,6 +15,13 @@ logger = logging.getLogger(__name__)
 PRODUCT_ID_MAP: Dict[int, str] = {}
 PRODUCT_TITLE_MAP: Dict[int, str] = {}
 
+class Colors:
+    GREEN = '\033[92m'   # Good for the main Answer/Product list
+    CYAN = '\033[96m'    # Good for Analysis/Review Summaries
+    YELLOW = '\033[93m'  # Good for System Messages (loading...)
+    BOLD = '\033[1m'
+    RESET = '\033[0m'    # Resets color to default
+
 def parse_llm_answer_for_products(llm_answer: str) -> None:
     """
     Parses the structured LLM answer to extract a map of 
@@ -94,11 +101,10 @@ def main():
 
             # Print final answer
             if result.get("final_answer"):
-                print(f"\nAnswer: {result['final_answer']}")
+                print(f"\n{Colors.GREEN}Answer: {result['final_answer']}{Colors.RESET}")
                 
-                # *** NEW LOGIC START: Prepare for Stage 2 ***
+                # Prepare for Stage 2
                 parse_llm_answer_for_products(result['final_answer'])
-                # *** NEW LOGIC END ***
                 
             elif result.get("error"):
                 print(f"\nError occurred: {result['error']}")
@@ -142,8 +148,6 @@ def main():
                                 print("No reviews found for this product ID in the external file.")
                                 print("--- END REVIEWS ---\n")
                                 continue # Skip summary generation if no reviews
-
-                            # --- NEW LOGIC START: LLM Review Summary ---
                             
                             # 1. Limit the reviews to avoid LLM context overflow
                             MAX_REVIEWS_FOR_SUMMARY = 15
@@ -163,15 +167,15 @@ def main():
                             summary_prompt = build_review_summary_prompt(target_title)
                             summary_chain = summary_prompt | llm
                             
-                            print("\n--- GENERATING OVERALL SUMMARY (Processing first 15 reviews) ---")
+                            print(f"\n{Colors.BOLD}--- GENERATING OVERALL SUMMARY ---{Colors.RESET}")
                             
                             summary = summary_chain.invoke({
                                 "reviews_context": reviews_context
                             })
                             
-                            print(summary)
-                            print("--- END SUMMARY ---\n")
-                            # --- NEW LOGIC END ---
+                            # Apply CYAN color to the summary
+                            print(f"\n{Colors.CYAN}{summary}{Colors.RESET}")
+                            print(f"{Colors.BOLD}--- END SUMMARY ---{Colors.RESET}\n")
                         else:
                             print("Invalid product number. Please enter a number from the list or 'back'.")
                     except ValueError:
