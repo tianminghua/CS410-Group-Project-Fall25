@@ -1,6 +1,7 @@
 import logging
 import re
-from typing import Dict, Optional, List
+from collections import Counter
+from typing import Dict, Optional, List, Any
 
 from agent import create_agent, build_review_summary_prompt
 from utils.retriever import create_retriever
@@ -21,6 +22,50 @@ class Colors:
     YELLOW = '\033[93m'  # Good for System Messages (loading...)
     BOLD = '\033[1m'
     RESET = '\033[0m'    # Resets color to default
+
+def print_review_stats(reviews: List[Dict[str, Any]]) -> None:
+    """
+    Print review for each product
+    - Num of valid reviews
+    - Average rate
+    - The distribution of 1 - 5-star ratings
+    """
+
+    numeric_ratings: List[float] = []
+    for r in reviews:
+        try:
+            value = float(r.get("rating"))
+            numeric_ratings.append(value)
+        except (TypeError, ValueError):
+            continue
+
+    if not numeric_ratings:
+        print("No valid ratings available for statistics.\n")
+        return
+
+    total = len(numeric_ratings)
+    avg = sum(numeric_ratings) / total
+
+    print(f"\n{Colors.BOLD}--- REVIEW STATS ---{Colors.RESET}")
+    print(f"Total reviews with rating: {total}")
+    print(f"Average rating: {avg:.2f} / 5")
+
+    star_buckets: List[int] = []
+    for v in numeric_ratings:
+        rounded = int(round(v))
+        if 1 <= rounded <= 5:
+            star_buckets.append(rounded)
+
+    counter = Counter(star_buckets)
+
+    for star in range(5, 0, -1):
+        count = counter.get(star, 0)
+        perc = (count / total) * 100
+        bar = "#" * int(perc / 5) 
+        print(f"{star}★: {count:3d} ({perc:5.1f}%) {bar}")
+
+    print(f"{Colors.BOLD}--- END STATS ---{Colors.RESET}\n")
+
 
 def parse_llm_answer_for_products(llm_answer: str) -> None:
     """
@@ -137,6 +182,7 @@ def main():
                             print(f"\n--- REVIEWS FOR: {target_title} (ID: {target_id}) ---")
                             
                             if reviews:
+                                print_review_stats(reviews)
                                 # Print up to 5 reviews to avoid overwhelming the user
                                 for i, review in enumerate(reviews[:5]):
                                     print(f"Review {i+1} (Rating: {review['rating']}):")

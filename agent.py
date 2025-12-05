@@ -157,7 +157,27 @@ REVIEWS CONTEXT:
 * [Key Weakness 1]
 * [Key Weakness 2]
 
-**Analysis:** [2-3 sentences explaining the most critical details, quality issues, or specific use cases.]
+**Aspect Breakdown**
+
+- **Performance/Cleaning**
+  - Summary: [1–2 sentences about cleaning performance, power, effectiveness, etc.]
+  - Example: "[Short quoted phrase from a review, if available.]"
+
+- **Noise**
+  - Summary: [1–2 sentences about how loud or quiet it is.]
+  - Example: "[Short quoted phrase from a review, if available.]"
+
+- **Ease of Use**
+  - Summary: [1–2 sentences about installation, controls, daily use, learning curve.]
+  - Example: "[Short quoted phrase from a review, if available.]"
+
+- **Build Quality & Durability**
+  - Summary: [1–2 sentences about materials, reliability, and how long it seems to last.]
+  - Example: "[Short quoted phrase from a review, if available.]"
+
+- **Price/Value for Money**
+  - Summary: [1–2 sentences about whether the product feels worth the price.]
+  - Example: "[Short quoted phrase from a review, if available.]"
 """
     return ChatPromptTemplate.from_template(template)
 

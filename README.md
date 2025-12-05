@@ -1,6 +1,37 @@
 # CS410 Group Project - Product Feature Retrieval and Performance Analysis from Amazon Reviews
 
-We propose developing FeatureSearch, a tool that enables users to search for specific product features within Amazon reviews and analyze related customer opinions. Existing review platforms only provide overall ratings, making it difficult to understand detailed product strengths and weaknesses. Our tool integrates information retrieval and sentiment analysis to extract and summarize feature-level feedback, offering structured insights instead of raw text. We plan to use Amazon’s public review dataset, applying TF-IDF or BM25 for retrieval and VADER for sentiment scoring, with results visualized through charts and word clouds. Evaluation will be based on retrieval relevance, sentiment accuracy, and user feedback. The team will divide work into data preprocessing, retrieval and analysis, and visualization/interface development.
+We build a small but complete IR + text mining system on the Amazon **Appliances** collection. 
+Users can type a natural language query (e.g., “quiet compact dishwasher under $400 for a small apartment”) and:
+
+1. Get a ranked list of relevant products generated from a BM25 + Pyserini retriever and a local Ollama LLM.
+2. Select a product to see rating statistics and star distribution computed from its reviews.
+3. Read an aspect-based summary of real user opinions (performance/cleaning, noise, ease of use, durability, price/value).
+
+This project connects classic IR (BM25, indexing, retrieval) with LLM-based summarization in a simple two-stage command-line interface.
+
+## Tech Stack
+
+- **Language & Runtime**
+  - Python 3.10+
+
+- **IR / Search**
+  - [Pyserini](https://github.com/castorini/pyserini) (BM25, Lucene index)
+  - Java runtime for Lucene (required by Pyserini)
+
+- **LLM & Orchestration**
+  - [Ollama](https://ollama.com/) (local LLM backend, e.g. `llama3.2:3b`)
+  - `langchain` / `langchain-core` for LLM pipelines
+  - `langgraph` for building the retrieval → generation agent
+
+- **Data & Storage**
+  - Cleaned Amazon Appliances metadata and reviews as JSONL files
+  - Local `dataset/` folder with:
+    - `meta_Appliances_cleaned.jsonl`
+    - `Appliances_cleaned.jsonl`
+
+- **Interface & Utilities**
+  - Command-line interface (`main.py`) for two-stage interaction
+  - Standard Python tooling (`venv`, `pip`, `requirements.txt`)
 
 ## Team Members
 
@@ -68,6 +99,32 @@ Start it manually by running:
    ```
 
 Then, rerun the command above in a new terminal window.
+
+## Main Features
+
+- **Natural language product search**  
+  - Users ask free-form questions about appliances (budget, size, noise level, etc.).
+  - A Pyserini BM25 index over cleaned product metadata returns relevant candidates.
+
+- **LLM-enhanced product ranking**  
+  - A local Ollama model (e.g., `llama3.2:3b`) takes BM25 results and produces a short ranked list:
+    - product title,
+    - product ID (ASIN),
+    - average rating and review count,
+    - one-sentence description.
+
+- **Single-product review analysis**  
+  - Load all reviews for a selected product from `Appliances_cleaned.jsonl`.
+  - Compute rating statistics and a 1★–5★ star distribution.
+  - Generate an aspect-based summary of reviews, organized into:
+    - Performance/Cleaning  
+    - Noise  
+    - Ease of Use  
+    - Build Quality & Durability  
+    - Price/Value for Money  
+
+Together, these components let a user quickly go from a vague shopping need to concrete product options and a clear understanding of real user feedback.
+
 ## Project Structure
 
 ```
