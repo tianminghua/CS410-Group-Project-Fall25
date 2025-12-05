@@ -73,24 +73,14 @@ This project connects classic IR (BM25, indexing, retrieval) with LLM-based summ
    ollama pull llama3.2:3b
    ```
 
-5. We use the Amazon Reviews 2023 datasets released here:
+5. The cleaned versions of these files are too large to be checked into this repo, so we host them on Google Drive:
 
-- Original dataset: https://amazon-reviews-2023.github.io/
+   Google Drive folder: https://drive.google.com/drive/folders/1ZIVppO-I1QSTU-WzllgZ0dmFtQ1T3HB3
 
-For this project, we only work with the **Appliances** subset:
-
-- `meta_Appliances.jsonl` – product metadata  
-- `Appliances.jsonl` – user reviews  
-
-The cleaned versions of these files are too large to be checked into this repo, so we host them on Google Drive:
-
-- Google Drive folder: https://drive.google.com/drive/folders/1ZIVppO-I1QSTU-WzllgZ0dmFtQ1T3HB3
-
-1. Create a `dataset/` folder at the root of this repo.
-2. Download the cleaned files from the Drive folder into `dataset/`, for example:
+   Create a `dataset/` folder at the root of this repo. then download the cleaned files from the Drive folder into `dataset/`, for example:
    - `meta_Appliances_cleaned.jsonl`
    - `Appliances_cleaned.jsonl`
-3. Make sure the filenames in `dataset/` match the paths expected in the code.
+   Make sure the filenames in `dataset/` match the paths expected in the code.
 
 
 ## Usage
@@ -109,6 +99,38 @@ Start it manually by running:
    ```
 
 Then, rerun the command above in a new terminal window.
+
+## Data
+
+We use the Amazon Reviews 2023 datasets released here:
+
+- Original project page: https://amazon-reviews-2023.github.io/
+
+For this project, we only work with the **Appliances** subset:
+
+- `meta_Appliances.jsonl` – product metadata  
+- `Appliances.jsonl` – user reviews  
+
+We used two Python scripts to clean and normalize the raw Amazon Appliances data before indexing:
+
+- `utils/clean_meta_appliances.py`  
+  - Input: `meta_Appliances.jsonl` from the Amazon Reviews 2023 dataset  
+  - Output: `meta_Appliances_cleaned.jsonl`  
+  - Tasks:
+    - Normalize product IDs (e.g., use `parent_asin` as a unified `product_id`)
+    - Clean and lowercase titles, categories, and descriptions
+    - Keep only useful fields such as `product_id`, `title`, `brand`, `price`, `average_rating`, `rating_number`, etc.
+    - Produce a compact JSONL file used as the corpus for Pyserini indexing
+
+- `utils/clean_appliances_reviews.py`  
+  - Input: `Appliances.jsonl` from the Amazon Reviews 2023 dataset  
+  - Output: `Appliances_cleaned.jsonl`  
+  - Tasks:
+    - Filter to verified (and non-trivial) reviews
+    - Normalize review titles and bodies
+    - Keep key fields such as `product_id`, `rating`, `title`, `text`, `helpful_vote`, etc.
+    - Produce a cleaned review file used for per-product statistics and summarization
+
 
 ## Main Features
 
