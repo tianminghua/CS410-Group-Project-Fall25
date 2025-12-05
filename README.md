@@ -73,14 +73,24 @@ This project connects classic IR (BM25, indexing, retrieval) with LLM-based summ
    ollama pull llama3.2:3b
    ```
 
-5. Download dataset from Google Drive:
+5. We use the Amazon Reviews 2023 datasets released here:
 
-   ```
-   https://drive.google.com/drive/folders/1ZIVppO-I1QSTU-WzllgZ0dmFtQ1T3HB3
-   ```
-   Create a **dataset** directory under the project folder
+- Original dataset: https://amazon-reviews-2023.github.io/
 
-   Save **Appliances_cleaned.jsonl** and **meta_appliances_cleaned.jsonl** under **dataset**
+For this project, we only work with the **Appliances** subset:
+
+- `meta_Appliances.jsonl` – product metadata  
+- `Appliances.jsonl` – user reviews  
+
+The cleaned versions of these files are too large to be checked into this repo, so we host them on Google Drive:
+
+- Google Drive folder: https://drive.google.com/drive/folders/1ZIVppO-I1QSTU-WzllgZ0dmFtQ1T3HB3
+
+1. Create a `dataset/` folder at the root of this repo.
+2. Download the cleaned files from the Drive folder into `dataset/`, for example:
+   - `meta_Appliances_cleaned.jsonl`
+   - `Appliances_cleaned.jsonl`
+3. Make sure the filenames in `dataset/` match the paths expected in the code.
 
 
 ## Usage
